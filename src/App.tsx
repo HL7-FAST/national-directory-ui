@@ -1,5 +1,6 @@
 import React from 'react';
 import './App.css';
+import 'react-data-grid/lib/styles.css';
 import {Box, Container, Tab, Tabs, Typography} from "@mui/material";
 import Organizations from "./Organizations";
 import Endpoints from "./Endpoints";
@@ -22,11 +23,7 @@ function TabPanel(props: TabPanelProps) {
             aria-labelledby={`simple-tab-${index}`}
             {...other}
         >
-            {value === index && (
-                <Box sx={{ p: 3 }}>
-                    <Typography>{children}</Typography>
-                </Box>
-            )}
+            {children}
         </div>
     );
 }
@@ -41,13 +38,11 @@ export default function App() {
   return (
       <Container maxWidth="lg">
           <h2>National Directory</h2>
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-              <Tabs onChange={handleChange} aria-label="basic tabs example" centered>
-                  <Tab label="Organizations" id="tab-1" />
-                  <Tab label="Endpoints" id="tab-2" />
-                  <Tab label="Dynamic Registration" id="tab-3" />
-              </Tabs>
-          </Box>
+          <Tabs value={value} onChange={handleChange} aria-label="basic tabs example" centered>
+              <Tab label="Organizations" id="tab-0" />
+              <Tab label="Endpoints" id="tab-1" />
+              <Tab label="Dynamic Registration" id="tab-2" />
+          </Tabs>
           <TabPanel value={value} index={0}>
               <Organizations></Organizations>
           </TabPanel>

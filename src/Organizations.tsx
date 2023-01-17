@@ -3,7 +3,6 @@ import {IBundle} from "@smile-cdr/fhirts/dist/FHIR-R4/interfaces/IBundle";
 import {IOrganization} from "@smile-cdr/fhirts/dist/FHIR-R4/interfaces/IOrganization";
 import {
     Button,
-    Pagination,
     Paper,
     Table,
     TableBody,
@@ -11,9 +10,11 @@ import {
     TableContainer,
     TableFooter,
     TableHead,
+    TablePagination,
     TableRow
 } from "@mui/material";
 import Organization from "./Organization";
+import {getFhirServerBase} from "./common";
 
 interface OrganizationsState {
     orgs: IOrganization[],
@@ -25,16 +26,14 @@ export default class Organizations extends React.Component<{}, OrganizationsStat
     state: OrganizationsState = {
         orgs: [],
         total: 0,
-        page: 1
+        page: 0
     }
 
     getData(page = 0) {
-        let url = "https://national-directory.fast.hl7.org/fhir/Organization?_count=20&_total=accurate&";
-        let skip = 0;
+        let url = `${getFhirServerBase()}/Organization?_count=20&_total=accurate&`;
 
         if (page) {
-            skip = page > 1 ? (page - 1) * 20 : 0;
-            url += `_getpagesoffset=${skip}&`;
+            url += `_getpagesoffset=${page * 20}&`;
         }
 
         fetch(url)
@@ -45,7 +44,7 @@ export default class Organizations extends React.Component<{}, OrganizationsStat
                 this.setState({
                     orgs: (result.entry || []).map(e => e.resource as IOrganization),
                     total: total,
-                    page: (skip / 20) + 1
+                    page
                 });
             });
     }
@@ -57,7 +56,7 @@ export default class Organizations extends React.Component<{}, OrganizationsStat
     render() {
         return (
             <TableContainer component={Paper}>
-                <Table aria-label="simple table">
+                <Table aria-label="Table of Organizations">
                     <TableHead>
                         <TableRow>
                             <TableCell>ID</TableCell>
@@ -67,11 +66,11 @@ export default class Organizations extends React.Component<{}, OrganizationsStat
                     </TableHead>
                     <TableBody>
                         {this.state.orgs.map(o => (
-                            <TableRow>
+                            <TableRow key={o.id}>
                                 <TableCell>{o.id}</TableCell>
                                 <TableCell>{o.name}</TableCell>
                                 <TableCell align="right">
-                                    <Organization orgId={o.id}></Organization>
+                                    <Organization org={o}></Organization>
                                     <Button>Delete</Button>
                                 </TableCell>
                             </TableRow>
@@ -79,13 +78,12 @@ export default class Organizations extends React.Component<{}, OrganizationsStat
                     </TableBody>
                     <TableFooter>
                         <TableRow>
-                            <TableCell>
-                                <Pagination
-                                    count={Math.ceil(this.state.total / 20)}
-                                    page={this.state.page}
-                                    onChange={(event, newPage) => this.getData(newPage)}
-                                    variant="outlined" />
-                            </TableCell>
+                            <TablePagination
+                                rowsPerPageOptions={[20]}
+                                count={this.state.total}
+                                page={this.state.page}
+                                rowsPerPage={20}
+                                onPageChange={(event, newPage) => this.getData(newPage)} />
                         </TableRow>
                     </TableFooter>
                 </Table>

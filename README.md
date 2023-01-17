@@ -2,6 +2,10 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Configuration
+
+Set `REACT_APP_FHIR_SERVER_BASE` environment variable to the base URL of the FHIR server for the application.
+
 ## Available Scripts
 
 In the project directory, you can run:
