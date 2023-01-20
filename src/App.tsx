@@ -1,7 +1,6 @@
 import React from 'react';
 import './App.css';
-import 'react-data-grid/lib/styles.css';
-import {Box, Container, Tab, Tabs, Typography} from "@mui/material";
+import {Container, Tab, Tabs} from "@mui/material";
 import Organizations from "./Organizations";
 import Endpoints from "./Endpoints";
 import DynamicRegistration from "./DynamicRegistration";

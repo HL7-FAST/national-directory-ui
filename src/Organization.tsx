@@ -5,16 +5,15 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableRow,
-    TextField, Toolbar, Typography
+    Icon,
+    IconButton,
+    TextField,
+    Toolbar,
+    Typography
 } from "@mui/material";
 import React from "react";
 import {IOrganization} from "@smile-cdr/fhirts/dist/FHIR-R4/interfaces/IOrganization";
-import {DataGrid, GridColDef, GridToolbarContainer} from "@mui/x-data-grid";
+import MaterialTable from "material-table";
 
 interface OrganizationProps {
     org?: IOrganization;
@@ -38,24 +37,26 @@ const baseExtRatingUrl = 'http://hl7.org/fhir/us/ndh/StructureDefinition/base-ex
 const orgDescriptionExtensionUrl = 'http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-org-description';
 
 export default class Organization extends React.Component<OrganizationProps, OrganizationState> {
-    state: OrganizationState = {
-        open: false,
-        ratings: []
-    };
 
-    componentDidMount() {
+    constructor(props: OrganizationProps) {
+        super(props);
+
         const ratings = this.props.org ? Organization.getRatings(this.props.org) : [];
 
         if (!ratings.length) {
             ratings.push({
-                id: ratings.length
+                id: ratings.length,
+                rating: 'test-rating',
+                typeSystem: 'test-system',
+                typeCode: 'test-code'
             });
         }
 
-        this.setState({
+        this.state = {
+            open: false,
             org: this.props.org,
-            ratings
-        });
+            ratings: ratings
+        };
     }
 
     openDialog() {
@@ -157,21 +158,15 @@ export default class Organization extends React.Component<OrganizationProps, Org
     render() {
         let content;
 
-        const ratingsCols: GridColDef[] = [{
+        const ratingsCols = [{
             field: 'typeSystem',
-            headerName: 'Type System',
-            editable: true,
-            width: 150
+            title: 'Type System'
         }, {
             field: 'typeCode',
-            headerName: 'Type Code',
-            editable: true,
-            width: 150
+            title: 'Type Code'
         }, {
             field: 'rating',
-            headerName: 'Rating',
-            editable: true,
-            width: 150
+            title: 'Rating'
         }];
 
         if (this.state.org) {
@@ -182,18 +177,63 @@ export default class Organization extends React.Component<OrganizationProps, Org
                         <TextField type="text" placeholder="Name" label="Name" value={this.orgName} onChange={(event) => this.orgName = event.target.value} />
                         <TextField type="text" placeholder="Description" label="Description" value={this.orgDescription} onChange={(event) => this.orgDescription = event.target.value} />
 
-                        <Toolbar>
-                            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>Ratings</Typography>
-                            <Button color="inherit" onClick={() => this.addRating()}>Add</Button>
+                        <Toolbar variant="dense">
+                            <Typography variant="overline" component="div" sx={{ flexGrow: 1 }}>Ratings</Typography>
+                            <IconButton color="inherit" onClick={() => this.addRating()} title="Add Rating">
+                                <Icon color="primary">add_circle</Icon>
+                            </IconButton>
                         </Toolbar>
 
-                        <DataGrid
-                            density="compact"
-                            autoHeight
-                            hideFooter={true}
+                        <MaterialTable
+                            title="Ratings"
                             columns={ratingsCols}
-                            rows={this.state.ratings}
-                        />
+                            data={this.state.ratings}
+                            options={{
+                                search: false,
+                                paging: false
+                            }}
+                            editable={{
+                                onRowAdd: newData => {
+                                    return new Promise((resolve, reject) => {
+                                        newData.id = this.state.ratings.length;
+                                        this.setState({
+                                            ratings: this.state.ratings.concat([newData])
+                                        });
+                                        resolve(newData);
+                                    });
+                                },
+                                onRowUpdate: (newData, oldData?: OrganizationRating) => {
+                                    return new Promise((resolve, reject) => {
+                                        const found = this.state.ratings.find(r => r.id === oldData?.id);
+
+                                        if (found) {
+                                            Object.assign(found, newData);
+                                        } else {
+                                            this.state.ratings.push(newData);
+                                        }
+
+                                        this.setState({
+                                            ratings: this.state.ratings
+                                        });
+                                        resolve(newData);
+                                    });
+                                },
+                                onRowDelete: oldData => {
+                                    return new Promise((resolve, reject) => {
+                                        const found = this.state.ratings.find(r => r.id === oldData.id);
+                                        if (found) {
+                                            const index = this.state.ratings.indexOf(found);
+                                            this.state.ratings.splice(index, 1);
+                                            this.setState({
+                                                ratings: [...this.state.ratings]
+                                            });
+                                        }
+                                        resolve(this.state.ratings);
+                                    });
+                                }
+                            }}
+                        ></MaterialTable>
+
                     </Box>
                 </DialogContent>
             );
